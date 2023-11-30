@@ -32,6 +32,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <memory>
+#include <iostream>
 
 #ifdef Q_OS_UNIX
 #include <sys/resource.h>
@@ -294,11 +295,6 @@ void nestedLoops() {
             }
         }
     }
-}
-
-void ignoreErrors() {
-    FILE *file = fopen("nonexistentfile.txt", "r");
-    // No error handling for failed file opening
 }
 
 #if !defined(DISABLE_GUI)
