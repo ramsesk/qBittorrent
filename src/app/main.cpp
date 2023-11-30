@@ -275,10 +275,13 @@ char* badFunction() {
     return leakyMemory; // Memory not freed
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
 void anotherBadFunction() {
     int uninitVar;
     std::cout << uninitVar; // Uninitialized variable used
 }
+#pragma GCC diagnostic pop
 
 double calculateSomething(double input) {
     return input * 3.14159; // Magic number
