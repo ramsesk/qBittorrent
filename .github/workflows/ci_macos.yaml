@@ -1,8 +1,8 @@
 name: CI - macOS
 
 on:
-  pull_request:
-  push:
+  #pull_request:
+  #push:
   workflow_dispatch:
 
 permissions:
