@@ -1,0 +1,100 @@
+name: Sonar scan - Ubuntu
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+jobs:
+  sonar:
+    name: Sonar scan
+    runs-on: ubuntu-latest
+
+    env:
+      libt_version: "2.0.9"
+      qbt_gui: "GUI=ON"
+      qt_version: "6.5.2"
+      BUILD_WRAPPER_OUT_DIR: build_sonar # Directory where build-wrapper output will be placed
+      boost_path: "${{ github.workspace }}/../boost"
+      harden_flags: "-D_FORTIFY_SOURCE=2 -D_GLIBCXX_ASSERTIONS"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+
+      - name: Prepare Sonar Build Wrapper dir
+        run: |
+          mkdir -p ${{github.workspace}}/${{env.BUILD_WRAPPER_OUT_DIR}}
+          echo "BUILD_WRAPPER_OUT_DIR_ABSOLUTE=${{ github.workspace }}/${{ env.BUILD_WRAPPER_OUT_DIR }}" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install \
+            build-essential cmake ninja-build \
+            libssl-dev libxkbcommon-x11-dev libxcb-cursor-dev zlib1g-dev
+
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+          store_cache: ${{ startsWith(github.ref, 'refs/heads/') }}
+          update_packager_index: false
+          ccache_options: |
+            max_size=2G
+
+      - name: Install boost
+        run: |
+          curl \
+            -L \
+            -o "${{ runner.temp }}/boost.tar.gz" \
+            "https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz"
+          tar -xf "${{ runner.temp }}/boost.tar.gz" -C "${{ github.workspace }}/.."
+          mv "${{ github.workspace }}/.."/boost_* "${{ env.boost_path }}"
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.qt_version }}
+          archives: icu qtbase qtdeclarative qtsvg qttools
+          cache: true
+
+      - name: Install libtorrent
+        run: |
+          git clone \
+            --branch v${{ env.libt_version }} \
+            --depth 1 \
+            --recurse-submodules \
+            https://github.com/arvidn/libtorrent.git
+          cd libtorrent
+          CXXFLAGS="$CXXFLAGS ${{ env.harden_flags }}" \
+          cmake \
+            -B build \
+            -G "Ninja" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DBOOST_ROOT="${{ env.boost_path }}" \
+            -Ddeprecated-functions=OFF
+          cmake --build build
+          sudo cmake --install build
+
+      - name: Build qBittorrent with the buildwrapper
+        run: |
+          chmod +x ./.github/workflows/ubuntu_build_step.sh
+          export CXXFLAGS="$CXXFLAGS ${{ env.harden_flags }} -Werror" \
+          export LDFLAGS="$LDFLAGS -gz" \
+          export BOOST_PATH="${{env.boost_path}}"
+          export QBT_GUI="${{env.qbt_gui}}"          
+          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR_ABSOLUTE}} ./.github/workflows/ubuntu_build_step.sh
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+        run: |
+          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR_ABSOLUTE }}"
