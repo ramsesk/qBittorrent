@@ -4,7 +4,6 @@ on:
     branches:
       - master
   pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 jobs:
   sonar:
@@ -91,7 +90,7 @@ jobs:
           export BOOST_PATH="${{env.boost_path}}"
           export QBT_GUI="${{env.qbt_gui}}"
           build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR_ABSOLUTE}} ./.github/workflows/ubuntu_build_step.sh
-    
+
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,7 +106,7 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          
+
           # Optionally you can use the output from the Quality Gate in another step.
       # The possible outputs of the `quality-gate-status` variable are `PASSED`, `WARN` or `FAILED`.
       - name: "Example show SonarQube Quality Gate Status value"

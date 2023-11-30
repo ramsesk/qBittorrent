@@ -32,6 +32,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <memory>
+#include <iostream>
 
 #ifdef Q_OS_UNIX
 #include <sys/resource.h>
@@ -267,6 +268,50 @@ int main(int argc, char *argv[])
         displayErrorMessage(er.message());
         return EXIT_FAILURE;
     }
+}
+
+char* badFunction() {
+    char* leakyMemory = new char[100];
+    return leakyMemory; // Memory not freed
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+void anotherBadFunction() {
+    int uninitVar;
+    std::cout << uninitVar; // Uninitialized variable used
+}
+#pragma GCC diagnostic pop
+
+double calculateSomething(double input) {
+    return input * 3.14159; // Magic number
+}
+
+void nestedLoops() {
+    int big_number = 0;
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            for (int k = 0; k < 10; ++k) {
+                for (int l = 0; l < 10; ++l) {
+                    ++big_number;
+                }
+            }
+        }
+    }
+}
+
+void slightlyDifferentNestedLoops() {
+    int big_number = 0;
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            for (int k = 0; k < 10; ++k) {
+                for (int l = 0; l < 10; ++l) {
+                    ++big_number;
+                }
+            }
+        }
+    }
+    big_number += 1000;
 }
 
 #if !defined(DISABLE_GUI)
