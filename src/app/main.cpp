@@ -311,7 +311,7 @@ void slightlyDifferentNestedLoops() {
             }
         }
     }
-    big_number += 1000
+    big_number += 1000;
 }
 
 #if !defined(DISABLE_GUI)
