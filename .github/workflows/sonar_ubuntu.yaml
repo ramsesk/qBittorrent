@@ -89,12 +89,12 @@ jobs:
           export CXXFLAGS="$CXXFLAGS ${{ env.harden_flags }} -Werror" \
           export LDFLAGS="$LDFLAGS -gz" \
           export BOOST_PATH="${{env.boost_path}}"
-          export QBT_GUI="${{env.qbt_gui}}"          
+          export QBT_GUI="${{env.qbt_gui}}"
           build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR_ABSOLUTE}} ./.github/workflows/ubuntu_build_step.sh
 
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR_ABSOLUTE }}"
