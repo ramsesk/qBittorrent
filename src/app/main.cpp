@@ -269,6 +269,38 @@ int main(int argc, char *argv[])
     }
 }
 
+char* badFunction() {
+    char* leakyMemory = new char[100];
+    return leakyMemory; // Memory not freed
+}
+
+void anotherBadFunction() {
+    int uninitVar;
+    std::cout << uninitVar; // Uninitialized variable used
+}
+
+double calculateSomething(double input) {
+    return input * 3.14159; // Magic number
+}
+
+void nestedLoops() {
+    int big_number = 0;
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            for (int k = 0; k < 10; ++k) {
+                for (int l = 0; l < 10; ++l) {
+                    ++big_number;
+                }
+            }
+        }
+    }
+}
+
+void ignoreErrors() {
+    FILE *file = fopen("nonexistentfile.txt", "r");
+    // No error handling for failed file opening
+}
+
 #if !defined(DISABLE_GUI)
 void showSplashScreen()
 {
